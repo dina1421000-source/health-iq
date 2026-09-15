@@ -7,9 +7,9 @@
 <meta name="theme-color" content="#0B1F3D">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Clinic Intelligence">
+<meta name="apple-mobile-web-app-title" content="HealthIQ">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2308152C'/%3E%3Cstop offset='1' stop-color='%2335A3E0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Cg stroke='white' stroke-width='2.8' stroke-linecap='round'%3E%3Cpath d='M9 24v-6'/%3E%3Cpath d='M16 24V12'/%3E%3Cpath d='M23 24v-9'/%3E%3C/g%3E%3Ccircle cx='16' cy='7' r='2.2' fill='white'/%3E%3C/svg%3E">
-<title>Clinic Access &amp; Attendance Intelligence</title>
+<title>HealthIQ — منصة تحليل أوضاع العيادات الخارجية</title>
 <style>
 :root{
   --ink:#0D1B2E; --muted:#667A93; --line:#E4E7EC; --bg:#EEF1F5; --card:#FFFFFF;
@@ -1885,6 +1885,8 @@ function loadCfg(){
     const raw = localStorage.getItem(CFG_KEY);
     if(!raw) return JSON.parse(JSON.stringify(CFG_DEFAULT));
     const o = JSON.parse(raw);
+    const stale = ["منصة تحليل الحضور والطاقة العيادية","Clinic Access & Attendance Intelligence"];
+    if(stale.includes(o.titleAr)) o.titleAr = CFG_DEFAULT.titleAr;
     return {...CFG_DEFAULT, ...o, ai:{...CFG_DEFAULT.ai, ...(o.ai||{})}};
   }catch(e){ return JSON.parse(JSON.stringify(CFG_DEFAULT)); }
 }
@@ -2714,15 +2716,12 @@ function pageHome(recs, sm, bm, t){
   <section class="hero"${heroStyle}>
     <div class="hbrand">${esc(CFG.brand)}</div>
     <div class="htag">${esc(CFG.tagline)}</div>
-    <h2 class="hwelcome">${tr("welcome")} ${esc(CFG.brand)}</h2>
-    <p class="hsub">${tr("hsub")}</p>
   </section>
 
   <div class="spot ${sp.lv}">
     <div class="sph"><span class="spk">AI Spotlight</span><span class="spl">${tr("spotlight")}</span></div>
     <div class="spt">${esc(sp.head)}</div>
     <div class="spn">${esc(sp.nums)}</div>
-    <div class="spw"><span class="k">${tr("whyMatters")}</span> ${esc(sp.why)}</div>
     <button class="ghost" data-go="${sp.go}">${tr("details")}</button>
   </div>
 
