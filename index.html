@@ -1,16 +1,5 @@
 <!DOCTYPE html>
-<!--
-  ============================================================
-  منصة تحليل الحضور والطاقة العيادية
-  Developed, Analyzed & Prepared by Dina
-
-  ملف مستقل يعمل دون إنترنت أو تنصيب.
-  البيانات مضمّنة داخل الملف نفسه في المتغيرات DOCTORS و RECORDS و HOURS.
-  جميع الحسابات والرسوم مكتوبة داخل هذا الملف بلا مكتبات خارجية.
-  لا يحتوي أي بيانات مرضى: الحقول المستخدمة هي الطبيب والتاريخ
-  والحجوزات والحضور والدخول بلا موعد وساعات العيادة ومدة الموعد.
-  ============================================================
--->
+<!-- HealthIQ — تحليل حضور وطاقة العيادات الخارجية. Dina, Health Informatics. -->
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
@@ -23,7 +12,7 @@
 <title>Clinic Access &amp; Attendance Intelligence</title>
 <style>
 :root{
-  --ink:#0D1B2E; --muted:#667A93; --line:#E1E9F3; --bg:#F2F6FB; --card:#FFFFFF;
+  --ink:#0D1B2E; --muted:#667A93; --line:#E4E7EC; --bg:#EEF1F5; --card:#FFFFFF;
   --teal:#1668B3; --terra:#D4531D; --ochre:#0E7C91; --sage:#1B8A63; --soft:#EAF1FA;
   --navy:#0B1F3D; --azure:#35A3E0;
   --hero:linear-gradient(115deg,#08152C 0%,#0F3466 42%,#1D6FB8 76%,#35A3E0 100%);
@@ -481,6 +470,19 @@ html[dir=ltr] .sig{direction:ltr}
 .mini:hover{filter:brightness(.97)}
 td.dim{color:var(--muted);font-size:11.5px}
 
+.alertrow{padding:12px 0;border-bottom:1px solid var(--line)}
+.alertrow:last-of-type{border-bottom:0}
+.alerthd{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.alertev{font-size:12.5px;color:var(--muted);margin-bottom:4px}
+.alertrec{font-size:13.5px;line-height:1.55}
+#nav button,#tabrow button{position:relative}
+.pdot{position:absolute;top:4px;inset-inline-end:14px;min-width:17px;height:17px;line-height:17px;
+  padding:0 4px;border-radius:9px;background:#D4531D;color:#fff;font-size:11px;font-weight:700;text-align:center}
+.pendstrip{display:flex;align-items:center;gap:10px;width:100%;margin:0 0 14px;padding:12px 14px;
+  border:1px solid #F0C4AE;border-radius:12px;background:#FDF1EA;color:#8A3410;
+  font:inherit;font-size:13.5px;font-weight:600;text-align:start;cursor:pointer}
+.pdot2{min-width:22px;height:22px;line-height:22px;border-radius:11px;background:#D4531D;color:#fff;
+  font-size:12px;font-weight:700;text-align:center;flex:0 0 auto}
 </style>
 </head>
 <body>
@@ -578,7 +580,7 @@ td.dim{color:var(--muted);font-size:11.5px}
 
 <script>
 /* ============================================================
-   منصة تحليل الحضور والطاقة العيادية
+   منصة تحليل أوضاع العيادات الخارجية
    Developed, Analyzed & Prepared by Dina
    ============================================================ */
 
@@ -1089,6 +1091,7 @@ function navPages(){
     : base;
 }
 function pageAllowed(k){ return navPages().some(p=>p[0]===k); }
+function pendingCount(){ return isSuper() ? users().filter(u=>u.status===ST.PENDING).length : 0; }
 
 function kpiCard(l,v,note,alert){
   return `<div class="card kpi ${alert?"alert":""}"><div class="l">${l}</div>
@@ -1804,8 +1807,6 @@ function pageDQ(recs, sm){
   const gaps = [[L("وقت بداية ونهاية الموعد","Appointment start and end time"),L("خريطة حرارية بالساعة، ذروة الازدحام، وقت الانتظار","Hourly heatmap, peak congestion, waiting time")],
     [L("رقم العيادة أو الغرفة","Clinic or room number"),L("مقارنة عيادة بعيادة، وتعارض استخدام الغرف","Clinic-to-clinic comparison and room conflicts")],
     [L("حالة الحجز: ملغي أم متخلف","Booking status: cancelled or no-show"),L("فصل عدم الحضور القابل للتدارك عن غير القابل","Separating recoverable no-shows from unrecoverable ones")],
-    [L("نوع الزيارة: أولى أم مراجعة","Visit type: first visit or follow-up"),L("تفسير فروق الإنتاجية بين الأطباء","Explaining productivity differences between doctors")],
-    [L("مصدر الإحالة","Referral source"),L("معرفة مصدر ارتفاع الدخول بلا موعد","Identifying the source of high walk-in volume")],
     [L("ملفات الأشهر السابقة","Previous months' files"),L("الاتجاه الزمني، اكتشاف الشذوذ، ومقارنة فترة بفترة","Time trend, anomaly detection and period-to-period comparison")]];
   return `
   <div class="cs">${L("هذه الملاحظات تؤثر على كل الأرقام.","These notes affect every figure.")}</div>
@@ -1845,12 +1846,8 @@ function pageDQ(recs, sm){
       <div class="ct">${L("بيانات لو توفرت لرفعت دقة التحليل","Data that would improve accuracy if available")}</div>
       <div class="cs">${L("لا تدخل في الحسابات الحالية","not used in current calculations")}</div>
       <table><tbody>
-      <tr><td>${L("وقت بداية الموعد","Appointment start time")}</td><td><span class="chip dn">${TW("غير متوفر")}</span></td></tr>
-      <tr><td>${L("وقت نهاية الموعد","Appointment end time")}</td><td><span class="chip dn">${TW("غير متوفر")}</span></td></tr>
       <tr><td>${L("رقم العيادة أو الغرفة","Clinic or room number")}</td><td><span class="chip dn">${TW("غير متوفر")}</span></td></tr>
       <tr><td>${L("الإلغاء مقابل عدم الحضور","Cancellation vs no-show")}</td><td><span class="chip dn">${TW("غير متوفر")}</span></td></tr>
-      <tr><td>${L("زيارة أولى أم مراجعة","First visit or follow-up")}</td><td><span class="chip dn">${TW("غير متوفر")}</span></td></tr>
-      <tr><td>${L("مصدر الإحالة","Referral source")}</td><td><span class="chip dn">${TW("غير متوفر")}</span></td></tr>
       <tr><td>${L("بيانات الأشهر السابقة","Previous months' data")}</td><td><span class="chip dn">${TW("غير متوفر")}</span></td></tr>
       </tbody></table>
     </div>
@@ -1874,7 +1871,7 @@ const DEFAULT_HASH = "68634a8fd6c189a3fc5965983021706cfb0bc52acf55182163cae5c684
 const CFG_DEFAULT = {
   brand:"HealthIQ",
   tagline:"AI-Powered Healthcare Analytics",
-  titleAr:"منصة تحليل الحضور والطاقة العيادية",
+  titleAr:"منصة تحليل أوضاع العيادات الخارجية",
   accent:"#1668B3", navy:"#0B1F3D", azure:"#35A3E0",
   bgImage:"", heroImage:"", logo:"", bgOpacity:12, clinics:[],
   adminHash: DEFAULT_HASH,
@@ -2720,10 +2717,6 @@ function pageHome(recs, sm, bm, t){
     <div class="htag">${esc(CFG.tagline)}</div>
     <h2 class="hwelcome">${tr("welcome")} ${esc(CFG.brand)}</h2>
     <p class="hsub">${tr("hsub")}</p>
-    <div class="hflow">
-      ${(LANG==="en"?T.flow[1]:T.flow[0])
-        .map((x,i)=>`<span class="hstep"><b>${i+1}</b>${x}</span>`).join('<span class="harrow">←</span>')}
-    </div>
   </section>
 
   <div class="spot ${sp.lv}">
@@ -2733,6 +2726,24 @@ function pageHome(recs, sm, bm, t){
     <div class="spw"><span class="k">${tr("whyMatters")}</span> ${esc(sp.why)}</div>
     <button class="ghost" data-go="${sp.go}">${tr("details")}</button>
   </div>
+
+  ${ pendingCount() ? `<button class="pendstrip" data-go="access">
+      <span class="pdot2">${pendingCount()}</span>
+      ${L("طلب وصول بانتظار قرارك — اضغطي للمراجعة","access requests awaiting your decision — tap to review")}
+     </button>` : "" }
+
+  ${(()=>{ const a = smartAlerts(recs, sm, t).slice(0,3); if(!a.length) return "";
+      const S = SEV();
+      return `<h2 class="sec">${L("يحتاج انتباهك","Needs your attention")}</h2>
+      <div class="card">${a.map(x=>`
+        <div class="alertrow">
+          <div class="alerthd"><span class="prio ${ (S[x.lv]||{}).c || "md" }">${ (S[x.lv]||{}).t || "" }</span>
+            <b>${esc(x.title)}</b></div>
+          <div class="alertev mono">${esc(x.evi)}</div>
+          <div class="alertrec">${esc(x.rec)}</div>
+        </div>`).join("")}
+        <button class="ghost" data-go="ai">${L("بقية التنبيهات","All alerts")}</button>
+      </div>`; })()}
 
   ${progressBadge(recs)}
 
@@ -2777,7 +2788,6 @@ function sevPill(lv){ const v=SEV()[lv]; return `<span class="prio ${v.c}">${v.t
 function alertCard(a){
   return `<div class="alert-card ${a.lv}">
     <div class="ah">${sevPill(a.lv)}<span class="at">${esc(a.title)}</span></div>
-    <div class="pev"><span class="k">${L("المشكلة","Problem")}</span><span class="v">${esc(a.body)}</span></div>
     <div class="pev"><span class="k">${L("الدليل","Evidence")}</span><span class="v">${esc(a.evi)}</span></div>
     <div class="pev rec"><span class="k">${L("التوصية","Recommendation")}</span><span class="v">${esc(a.rec)}</span></div>
   </div>`;
@@ -2968,7 +2978,7 @@ function pageAsk(recs, sm, t){
 
   return `
   <div class="banner"><div class="q">${L("اسأل HealthIQ","Ask HealthIQ")}</div>
-    <div class="a">${L("الإجابة تُبنى من بيانات اللوحة فقط، وتُعرض بالترتيب: الإجابة ← الدليل ← البيانات ← القراءة ← التوصية.","Answers are built from dashboard data only, in this order: Answer → Evidence → Data → Interpretation → Recommendation.")}</div></div>
+    <div class="a">${L("كل إجابة مبنية على أرقام اللوحة، ومعها البيانات التي استُخرجت منها.","Every answer is built on the dashboard figures, and shows the data behind it.")}</div></div>
 
   <div class="card askbox">
     <div class="askrow">
@@ -3134,6 +3144,35 @@ function bindAdmin(){
 const ROLE_SUPER = "super", ROLE_USER = "user";
 const ST = {PENDING:"pending", APPROVED:"approved", REJECTED:"rejected", SUSPENDED:"suspended"};
 
+/* ---------- طبقة الوصول عبر الخادم (Supabase) ---------- */
+const SB_URL = "https://ayzozncfoswpbttjrzbb.supabase.co";
+const SB_KEY = "sb_publishable_Ha0aMJAHJrCgxynWPtHRsw_7DCU_JCF";
+let SB_OK = true;   /* يصير false لو تعذّر الاتصال، فنرجع للتخزين المحلي */
+
+function sbHead(extra){
+  return Object.assign({
+    "apikey": SB_KEY,
+    "Authorization": "Bearer " + SB_KEY,
+    "Content-Type": "application/json"
+  }, extra||{});
+}
+function sbRow(r){
+  return { name: r.full_name, email: r.email, role: r.role, status: r.status,
+           requested: (r.requested_at||"").slice(0,16).replace("T"," "),
+           decidedBy: r.decision_note||"", decidedAt: (r.decided_at||"").slice(0,16).replace("T"," ") };
+}
+async function loadUsers(){
+  try{
+    const res = await fetch(SB_URL+"/rest/v1/app_users?select=*&order=requested_at.desc", {headers: sbHead()});
+    if(!res.ok) throw new Error(res.status);
+    const rows = await res.json();
+    CFG.users = rows.map(sbRow);
+    SB_OK = true;
+  }catch(e){ SB_OK = false; }
+  return CFG.users;
+}
+async function refreshUsers(){ await loadUsers(); if(state.page==="access") render(); }
+
 function users(){ return Array.isArray(CFG.users) ? CFG.users : (CFG.users = []); }
 function findUser(email){
   const e = String(email||"").trim().toLowerCase();
@@ -3141,11 +3180,12 @@ function findUser(email){
 }
 function nowIso(){ return new Date().toISOString().slice(0,16).replace("T"," "); }
 
-function requestAccess(name, email){
+async function requestAccess(name, email){
   const e = String(email||"").trim().toLowerCase();
   if(!name || !e) return {ok:false, msg:L("الاسم والبريد مطلوبان","Name and email are required")};
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e))
     return {ok:false, msg:L("صيغة البريد غير صحيحة","Invalid email format")};
+  await loadUsers();
   const ex = findUser(e);
   if(ex){
     if(ex.status===ST.APPROVED) return {ok:false, msg:L("هذا البريد معتمد بالفعل — سجّلي الدخول","This email is already approved — sign in")};
@@ -3153,14 +3193,23 @@ function requestAccess(name, email){
     if(ex.status===ST.REJECTED) return {ok:false, msg:L("تم رفض هذا الطلب سابقًا","This request was previously rejected")};
     if(ex.status===ST.SUSPENDED)return {ok:false, msg:L("هذا الحساب موقوف","This account is suspended")};
   }
-  users().push({name:String(name).trim(), email:e, role:ROLE_USER, status:ST.PENDING,
-                requested:nowIso(), decidedBy:"", decidedAt:""});
-  saveCfg();
-  return {ok:true, msg:L("أُرسل الطلب. لا يمكن الدخول قبل اعتماد المسؤول.",
-                         "Request submitted. Access is not possible until an administrator approves it.")};
+  try{
+    const res = await fetch(SB_URL+"/rest/v1/app_users", {
+      method:"POST", headers: sbHead({"Prefer":"return=representation"}),
+      body: JSON.stringify({ full_name:String(name).trim(), email:e, role:"viewer", status:"pending" })
+    });
+    if(!res.ok) throw new Error(await res.text());
+    await loadUsers();
+    return {ok:true, msg:L("أُرسل الطلب. لا يمكن الدخول قبل اعتماد المسؤول.",
+                           "Request submitted. Access is not possible until an administrator approves it.")};
+  }catch(err){
+    return {ok:false, msg:L("تعذّر الاتصال بالخادم. حاولي مرة أخرى.",
+                            "Could not reach the server. Please try again.")};
+  }
 }
 
-function signInUser(email){
+async function signInUser(email){
+  await loadUsers();
   const u = findUser(email);
   if(!u) return {ok:false, msg:L("لا يوجد طلب بهذا البريد","No request exists for this email")};
   if(u.status===ST.PENDING)   return {ok:false, msg:L("طلبك ما زال قيد المراجعة","Your request is still under review")};
@@ -3170,12 +3219,18 @@ function signInUser(email){
   return {ok:true};
 }
 
-function decide(email, status){
-  const u = findUser(email); if(!u) return;
-  u.status = status;
-  u.decidedBy = L("المسؤول الأعلى","Super Admin");
-  u.decidedAt = nowIso();
-  saveCfg(); render();
+async function decide(email, status){
+  const e = String(email||"").trim().toLowerCase();
+  try{
+    const res = await fetch(SB_URL+"/rest/v1/app_users?email=eq."+encodeURIComponent(e), {
+      method:"PATCH", headers: sbHead({"Prefer":"return=representation"}),
+      body: JSON.stringify({ status: status, decided_at: new Date().toISOString(),
+                             decision_note: L("المسؤول الأعلى","Super Admin") })
+    });
+    if(!res.ok) throw new Error(await res.text());
+  }catch(err){ SB_OK = false; }
+  await loadUsers();
+  render();
 }
 
 /* ---------- ما يراه كل دور ---------- */
@@ -3214,8 +3269,7 @@ function pageAccess(){
 
   return `
   <div class="banner"><div class="q">${L("طلبات الوصول","Access Requests")}</div>
-    <div class="a">${L("لا يُعتمد أي مستخدم تلقائيًا. الاعتماد قرار يدوي منك، ويُسجَّل باسمك ووقته.",
-                        "No user is approved automatically. Approval is a manual decision by you, recorded with your name and time.")}</div></div>
+    <div class="a">${L("لا اعتماد تلقائي. كل قرار يُسجَّل باسمك ووقته.","No automatic approval. Every decision is logged with your name and time.")}</div></div>
 
   <div class="grid g4">
     ${kpiCard(L("قيد المراجعة","Pending"), n0(by(ST.PENDING).length), L("بانتظار قرارك","awaiting your decision"), by(ST.PENDING).length>0)}
@@ -3235,8 +3289,8 @@ function pageAccess(){
      <div class="cs">${L("يظهر هنا كل من يطلب الوصول من شاشة الدخول.","Anyone who requests access from the sign-in screen appears here.")}</div></div>`}
 
   <div class="exnote"><span class="k">${L("حدود هذا الفصل","Limits of this separation")}</span>
-  ${L("الملف يعمل بلا خادم، فهذا فصل تشغيلي داخل الواجهة: يمنع المستخدم المعتمد من صفحات الإدارة والبيانات الخام أثناء الاستخدام العادي، لكنه لا يمنع من يفتح الملف في محرر نصوص من قراءة محتواه. المنع الحقيقي يحتاج خادمًا وقاعدة بيانات.",
-      "The file runs without a server, so this is an operational separation inside the interface: it keeps approved users out of admin pages and raw data during normal use, but it cannot stop someone who opens the file in a text editor. Real enforcement requires a server and a database.")}</div>`;
+  ${L("المستخدمون والاعتمادات على قاعدة البيانات، مشتركة بين كل الأجهزة. بيانات العيادات ما زالت داخل الملف، ونقلها للخادم هو التالي.",
+      "Users and approvals live in the database, shared across devices. Clinic data is still inside the file; moving it to the server comes next.")}</div>`;
 }
 
 function bindAccess(){
@@ -3265,15 +3319,15 @@ function showGate(){
   $("goSuper").onclick = ()=>{ show("paneSuper"); $("gatePw").focus(); };
   document.querySelectorAll("[data-back]").forEach(b=>b.onclick=()=>show("paneChoose"));
 
-  const doUser = ()=>{
-    const r = signInUser($("uEmail").value);
+  const doUser = async ()=>{
+    const r = await signInUser($("uEmail").value);
     if(r.ok) startApp(); else say("uErr", r.msg, false);
   };
   $("uGo").onclick = doUser;
   $("uEmail").onkeydown = e => { if(e.key==="Enter") doUser(); };
 
-  $("rGo").onclick = ()=>{
-    const r = requestAccess($("rName").value, $("rEmail").value);
+  $("rGo").onclick = async ()=>{
+    const r = await requestAccess($("rName").value, $("rEmail").value);
     say("rErr", r.msg, r.ok);
     if(r.ok){ $("rName").value=""; $("rEmail").value=""; }
   };
@@ -3340,8 +3394,10 @@ function renderTabs(){
   const btn = (k,on)=>`<button data-t="${k}" class="${on?"on":""}" ${on?'aria-current="page"':""}>
     ${svgIcon(k)}<span>${TAB_LABEL()[k]}</span></button>`;
   const main = TAB_MAIN.filter(pageAllowed);
+  const pend = pendingCount();
   row.innerHTML = main.map(k=>btn(k, state.page===k)).join("")
-    + btn("more", !main.includes(state.page));
+    + btn("more", !main.includes(state.page)).replace("</button>",
+        (pend ? `<span class="pdot">${pend}</span>` : "") + "</button>");
   row.querySelectorAll("button").forEach(b=>b.onclick=()=>{
     const k = b.dataset.t;
     if(k==="more") openSheet("pages"); else goPage(k);
@@ -3390,7 +3446,8 @@ function render(){
   if(!isSuper() && SUPER_ONLY.includes(state.page)) state.page = "home";
   if(!pageAllowed(state.page)) state.page = navPages()[0][0];
   $("nav").innerHTML = navPages().map(([k,v])=>
-    `<button data-p="${k}" class="${k===state.page?"on":""}">${v}</button>`).join("");
+    `<button data-p="${k}" class="${k===state.page?"on":""}">${v}${
+      pendingCount() && k==="access" ? `<span class="pdot">${pendingCount()}</span>` : ""}</button>`).join("");
   $("nav").querySelectorAll("button").forEach(b=>b.onclick=()=>{state.page=b.dataset.p; render();});
 
   const allMonths = uniq(ALL.map(r=>r.month)).sort();
@@ -3507,6 +3564,7 @@ function init(){
 applyCfg();
 setLang(LANG);
 if(ROLE) startApp(); else showGate();
+loadUsers().then(()=>{ if(state && state.page==="access") render(); });
 </script>
 </body>
 </html>
