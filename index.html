@@ -2392,7 +2392,7 @@ function askHealthIQ(qRaw, recs, sm, t){
       ip:L("غياب التنبيه لا يعني الكفاءة القصوى، بل عدم تجاوز الحدود المضبوطة في الإعدادات.","No alert does not mean peak efficiency — only that the thresholds set in settings were not crossed.")});
     return R({a:`${L("أولويات التحسين:","Improvement priorities:")} ${al.map(a=>a.title).join(" · ")}.`,
       ev: al.map(a=>a.evi).join(" | "),
-      d: tbl([L("الأولوية","Priority"),L("المشكلة","Problem"),L("التوصية","Recommendation")], al.map(a=>[esc(a.title), esc(a.body), esc(a.rec)])),
+      d: tbl([L("الأولوية","Priority"),L("المؤشر","Finding")], al.map(a=>[esc(a.title), esc(a.evi)])),
       ip:L("الترتيب حسب الأثر التشغيلي: الفاقد في وقت محجوز أولًا، ثم الطاقة غير المطلوبة.","Ordered by operational impact: waste in reserved time first, then capacity with no demand."),
       rc:L("عالجي البند الأول فقط لدورة واحدة، ثم أعيدي القياس قبل الانتقال للتالي.","Address only the first item for one cycle, then measure again before moving on.")});
   }
@@ -2533,7 +2533,7 @@ function pageRegistry(recs){
 
   if(!reg.length) return `
     <div class="banner"><div class="q">${L("سجل العيادات","Clinic Registry")}</div>
-      <div class="a">${L("رقم العيادة معرّف ثابت للحيّز الفيزيائي. الطبيب والتخصص واليوم والوقت متغيّرات تُربط به.","The clinic number is the fixed identifier of the physical room. Doctor, specialty, day and time are variables linked to it.")}</div></div>
+      </div>
     <div class="card empty">
       <div class="ct">${L("لا يوجد جدول عيادات محمّل","No clinic schedule loaded")}</div>
       <div class="cs">${L("لم أُنشئ أرقامًا تلقائية لأن توليد رقم أو تخمينه يخالف قاعدة ثبات الترقيم.","No automatic numbers were created, because generating or guessing a number breaks the fixed-numbering rule.")}</div>
@@ -2740,7 +2740,6 @@ function pageHome(recs, sm, bm, t){
           <div class="alerthd"><span class="prio ${ (S[x.lv]||{}).c || "md" }">${ (S[x.lv]||{}).t || "" }</span>
             <b>${esc(x.title)}</b></div>
           <div class="alertev mono">${esc(x.evi)}</div>
-          <div class="alertrec">${esc(x.rec)}</div>
         </div>`).join("")}
         <button class="ghost" data-go="ai">${L("بقية التنبيهات","All alerts")}</button>
       </div>`; })()}
@@ -2789,7 +2788,6 @@ function alertCard(a){
   return `<div class="alert-card ${a.lv}">
     <div class="ah">${sevPill(a.lv)}<span class="at">${esc(a.title)}</span></div>
     <div class="pev"><span class="k">${L("الدليل","Evidence")}</span><span class="v">${esc(a.evi)}</span></div>
-    <div class="pev rec"><span class="k">${L("التوصية","Recommendation")}</span><span class="v">${esc(a.rec)}</span></div>
   </div>`;
 }
 
@@ -2978,7 +2976,7 @@ function pageAsk(recs, sm, t){
 
   return `
   <div class="banner"><div class="q">${L("اسأل HealthIQ","Ask HealthIQ")}</div>
-    <div class="a">${L("كل إجابة مبنية على أرقام اللوحة، ومعها البيانات التي استُخرجت منها.","Every answer is built on the dashboard figures, and shows the data behind it.")}</div></div>
+    </div>
 
   <div class="card askbox">
     <div class="askrow">
@@ -2999,7 +2997,7 @@ function pageAdmin(){
   const c = CFG;
   return `
   <div class="banner"><div class="q">APPEARANCE STUDIO · ${L("استوديو المظهر","Appearance Studio")}</div>
-    <div class="a">${L("التغييرات تُحفظ في هذا المتصفح وتنعكس على العرض مباشرة. استخدمي التصدير لنقلها لجهاز آخر.","Changes are saved in this browser and apply immediately. Use export to move them to another device.")}</div></div>
+    </div>
 
   <div class="grid g2">
     <div class="card">
@@ -3269,7 +3267,7 @@ function pageAccess(){
 
   return `
   <div class="banner"><div class="q">${L("طلبات الوصول","Access Requests")}</div>
-    <div class="a">${L("لا اعتماد تلقائي. كل قرار يُسجَّل باسمك ووقته.","No automatic approval. Every decision is logged with your name and time.")}</div></div>
+    </div>
 
   <div class="grid g4">
     ${kpiCard(L("قيد المراجعة","Pending"), n0(by(ST.PENDING).length), L("بانتظار قرارك","awaiting your decision"), by(ST.PENDING).length>0)}
@@ -3288,9 +3286,7 @@ function pageAccess(){
   : `<div class="card empty"><div class="ct">${L("لا توجد طلبات بعد","No requests yet")}</div>
      <div class="cs">${L("يظهر هنا كل من يطلب الوصول من شاشة الدخول.","Anyone who requests access from the sign-in screen appears here.")}</div></div>`}
 
-  <div class="exnote"><span class="k">${L("حدود هذا الفصل","Limits of this separation")}</span>
-  ${L("المستخدمون والاعتمادات على قاعدة البيانات، مشتركة بين كل الأجهزة. بيانات العيادات ما زالت داخل الملف، ونقلها للخادم هو التالي.",
-      "Users and approvals live in the database, shared across devices. Clinic data is still inside the file; moving it to the server comes next.")}</div>`;
+  `;
 }
 
 function bindAccess(){
